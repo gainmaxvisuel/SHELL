@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARAIMO | Historique</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+    :root {
+        --bg-navy: #080c1d;
+        --card-glass: rgba(255, 255, 255, 0.05);
+        --accent-gold: #d4af37;
+        --success-glow: #00ff88;
+        --danger-glow: #ff4d4d;
+        --pending-glow: #37b3d4;
+        --text-dim: #a0acbd;
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        background-color: var(--bg-navy);
+        color: white;
+        padding-bottom: 30px;
+    }
+
+    /* HEADER */
+    .header {
+        padding: 20px;
+        background: rgba(13, 22, 49, 0.9);
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .back-btn { font-size: 24px; color: var(--accent-gold); cursor: pointer; margin-right: 15px; }
+    .title { font-size: 19px; font-weight: bold; }
+
+    /* FILTRES */
+    .filter-bar {
+        display: flex;
+        padding: 15px;
+        gap: 10px;
+        overflow-x: auto;
+    }
+
+    .filter-chip {
+        padding: 8px 18px;
+        background: var(--card-glass);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 20px;
+        font-size: 13px;
+        color: var(--text-dim);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: 0.3s;
+    }
+
+    .filter-chip.active {
+        background: var(--accent-gold);
+        color: #000;
+        font-weight: bold;
+        border-color: var(--accent-gold);
+    }
+
+    /* CARTES TRANSACTION */
+    .list-container { padding: 0 15px; }
+
+    .tx-card {
+        background: var(--card-glass);
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 15px;
+        border-left: 4px solid transparent;
+        position: relative;
+    }
+
+    .tx-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+    .tx-type { font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .type-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .tx-status { font-size: 10px; padding: 4px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; }
+
+    .tx-amount { font-size: 18px; font-weight: 800; color: var(--accent-gold); margin: 5px 0; }
+
+    .tx-info { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+    .tx-date { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 10px; display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="back-btn" onclick="location.href='dashboard.html'">←</div>
+    <div class="title">Historique des flux</div>
+</div>
+
+<div class="filter-bar">
+    <div class="filter-chip active" onclick="loadTx('all', this)">Tous</div>
+    <div class="filter-chip" onclick="loadTx('deposit', this)">Dépôts</div>
+    <div class="filter-chip" onclick="loadTx('withdraw', this)">Retraits</div>
+</div>
+
+<div class="list-container" id="txList"></div>
+
+<script>
+// CONFIGURATION
+const client = supabase.createClient("https://ycswpdydsgoqplkqtpsd.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA");
+const userId = localStorage.getItem("user_id");
+
+async function loadTx(filter, element) {
+    // UI Update
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    if(element) element.classList.add('active');
+
+    const container = document.getElementById("txList");
+    container.innerHTML = "<p style='text-align:center; color:gray; padding:20px;'>Synchronisation des données...</p>";
+
+    // RÉCUPÉRATION DES DEUX TABLES (Traces et Résultats finaux)
+    const [resTx, resDep] = await Promise.all([
+        client.from("transactions").select("*").eq("user_id", userId),
+        client.from("deposits").select("*").eq("user_id", userId)
+    ]);
+
+    let combined = [];
+
+    // Ajouter les transactions finales (Trigger SQL)
+    if (resTx.data) {
+        resTx.data.forEach(t => {
+            combined.push({
+                ...t,
+                origin: 'transaction',
+                display_status: t.status
+            });
+        });
+    }
+
+    // Ajouter les dépôts en attente (Traces non encore validées)
+    if (resDep.data) {
+        resDep.data.forEach(d => {
+            if (d.status === 'pending') {
+                combined.push({
+                    id: d.id,
+                    amount: d.amount,
+                    status: 'pending',
+                    display_status: 'En attente',
+                    type: 'deposit',
+                    description: 'Dépôt en cours de traitement',
+                    created_at: d.created_at,
+                    origin: 'deposit'
+                });
+            }
+        });
+    }
+
+    // Tri par date décroissante
+    combined.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    let html = "";
+    const filtered = combined.filter(t => filter === 'all' || t.type === filter);
+
+    filtered.forEach(t => {
+        // Logique visuelle selon le statut
+        let sColor = 'var(--pending-glow)';
+        if(t.status === 'success' || t.status === 'completed') sColor = 'var(--success-glow)';
+        if(t.status === 'failed' || t.status === 'rejected') sColor = 'var(--danger-glow)';
+
+        html += `
+        <div class="tx-card" style="border-left-color: ${sColor}">
+            <div class="tx-header">
+                <div class="tx-type">
+                    <div class="type-dot" style="background:${sColor}"></div>
+                    ${t.type.toUpperCase()}
+                </div>
+                <div class="tx-status" style="background:rgba(255,255,255,0.05); color:${sColor}">
+                    ${t.display_status}
+                </div>
+            </div>
+            <div class="tx-amount">${t.amount.toLocaleString()} FCFA</div>
+            <div class="tx-info">${t.description || 'Opération réseau'}</div>
+            <span class="tx-date">${new Date(t.created_at).toLocaleString('fr-FR')}</span>
+        </div>`;
+    });
+
+    container.innerHTML = html || "<p style='text-align:center; color:gray; margin-top:30px;'>Aucun mouvement enregistré</p>";
+}
+
+// Lancement au chargement
+if(!userId) {
+    location.href = 'index.html';
+} else {
+    loadTx('all');
+}
+</script>
+</body>
+</html>

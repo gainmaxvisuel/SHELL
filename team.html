@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARAIMO | Gestion d'Équipe</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+/* PALETTE DE COULEURS ORIGINALE ARAIMO */
+:root {
+    --deep-navy: #050a18;
+    --card-dark: #121b33;
+    --gold-primary: #d4af37;
+    --gold-light: #f1e0a1;
+    --text-main: #ffffff;
+    --text-muted: #8e9aaf;
+    --neon-accent: #00d4ff;
+    --danger: #ff4d6d;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--deep-navy);
+    color: var(--text-main);
+    padding-bottom: 100px;
+}
+
+/* EN-TÊTE DYNAMIQUE */
+.header-profile {
+    padding: 30px 20px;
+    background: linear-gradient(180deg, rgba(20,30,60,1) 0%, var(--deep-navy) 100%);
+    text-align: center;
+}
+
+.header-profile h1 {
+    font-size: 24px;
+    margin: 0;
+    background: linear-gradient(to right, var(--gold-primary), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+}
+
+/* SECTION INVITATION STYLISÉE */
+.invite-card {
+    margin: -20px 15px 20px;
+    background: var(--card-dark);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.label-mini {
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.copy-wrapper {
+    display: flex;
+    background: rgba(0,0,0,0.3);
+    border-radius: 14px;
+    padding: 5px;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.invite-link-text {
+    flex: 1;
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--neon-accent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-copy {
+    background: var(--gold-primary);
+    color: var(--deep-navy);
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-copy:active { transform: scale(0.95); }
+
+/* RÉSUMÉ DES GAINS */
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.summary-item {
+    background: rgba(255,255,255,0.03);
+    padding: 15px;
+    border-radius: 16px;
+    text-align: center;
+}
+
+.summary-item .val {
+    display: block;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--gold-light);
+    margin-bottom: 4px;
+}
+
+.summary-item .tit { font-size: 10px; color: var(--text-muted); }
+
+/* NIVEAUX D'ÉQUIPE (LISTE) */
+.team-list { padding: 0 15px; }
+
+.level-card {
+    background: var(--card-dark);
+    border-radius: 20px;
+    margin-bottom: 12px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+.level-icon {
+    width: 45px;
+    height: 45px;
+    background: rgba(212, 175, 55, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 15px;
+}
+
+.level-info { flex: 1; }
+.level-info .name { font-weight: 700; font-size: 15px; margin-bottom: 2px; display: block; }
+.level-info .percent { font-size: 11px; color: var(--gold-primary); font-weight: 600; }
+
+.level-stats { text-align: right; }
+.level-stats .count { display: block; font-size: 16px; font-weight: 800; }
+.level-stats .money { display: block; font-size: 12px; color: var(--danger); font-weight: 600; }
+
+/* NAVIGATION BAS */
+.nav-bar {
+    position: fixed; bottom: 0; width: 100%;
+    background: #080f21; display: flex; justify-content: space-around;
+    padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.nav-item { color: var(--text-muted); text-align: center; font-size: 10px; text-decoration: none; }
+.nav-item.active { color: var(--gold-primary); }
+.nav-item i { display: block; font-size: 22px; margin-bottom: 4px; font-style: normal; }
+
+/* TOAST */
+#toast {
+    position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
+    background: var(--gold-primary); color: var(--deep-navy);
+    padding: 8px 20px; border-radius: 20px; font-weight: 700;
+    font-size: 12px; display: none; z-index: 1000;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header-profile">
+    <h1>RÉSEAU SHELL</h1>
+</div>
+
+<!-- SECTION INVITATION -->
+<div class="invite-card">
+    <div class="label-mini">Lien de parrainage unique</div>
+    <div class="copy-wrapper">
+        <div class="invite-link-text" id="refLink">Chargement du lien...</div>
+        <button class="btn-copy" onclick="copyLink()">COPIER</button>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-item">
+            <span class="val" id="totalCom">0 FCFA</span>
+            <span class="tit">Commissions Totales</span>
+        </div>
+        <div class="summary-item">
+            <span class="val" id="teamCount">0</span>
+            <span class="tit">Membres Actifs</span>
+        </div>
+    </div>
+</div>
+
+<div class="team-list">
+    <div class="label-mini" style="margin-left: 10px;">Détails par Niveaux</div>
+
+    <!-- NIVEAU 1 -->
+    <div class="level-card">
+        <div class="level-icon">💎</div>
+        <div class="level-info">
+            <span class="name">Niveau Argent</span>
+            <span class="percent">Commission : 27%</span>
+        </div>
+        <div class="level-stats">
+            <span class="count" id="l1Count">0</span>
+            <span class="money" id="l1Rev">0 FCFA</span>
+        </div>
+    </div>
+
+    <!-- NIVEAU 2 -->
+    <div class="level-card">
+        <div class="level-icon">🌟</div>
+        <div class="level-info">
+            <span class="name">Niveau Or</span>
+            <span class="percent">Commission : 3%</span>
+        </div>
+        <div class="level-stats">
+            <span class="count" id="l2Count">0</span>
+            <span class="money" id="l2Rev">0 FCFA</span>
+        </div>
+    </div>
+
+    <!-- NIVEAU 3 -->
+    <div class="level-card">
+        <div class="level-icon">🚀</div>
+        <div class="level-info">
+            <span class="name">Niveau Platine</span>
+            <span class="percent">Commission : 2%</span>
+        </div>
+        <div class="level-stats">
+            <span class="count" id="l3Count">0</span>
+            <span class="money" id="l3Rev">0 FCFA</span>
+        </div>
+    </div>
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-bar">
+    <a href="dashboard.html" class="nav-item"><i>🏠</i>Accueil</a>
+    <a href="product.html" class="nav-item"><i>⚡</i>Investir</a>
+    <a href="#" class="nav-item active"><i>👥</i>Équipe</a>
+    <a href="account.html" class="nav-item"><i>👤</i>Compte</a>
+</div>
+
+<div id="toast">Lien copié avec succès !</div>
+
+<script>
+// CONFIGURATION SUPABASE
+const client = supabase.createClient(
+    "https://ycswpdydsgoqplkqtpsd.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA"
+);
+
+let userId = localStorage.getItem("user_id");
+
+async function loadData() {
+    if(!userId) return;
+
+    // 1. Récupérer le code de parrainage
+    const { data: user } = await client.from("users").select("referral_code").eq("id", userId).single();
+    if(user) {
+        document.getElementById("refLink").innerText = `https://shell-3nfr.vercel.app/register?ref=${user.referral_code}`;
+    }
+
+    // 2. Récupérer l'équipe
+    const { data: team } = await client.from("users").select("id, referred_by");
+    const { data: commissions } = await client.from("commissions").select("*").eq("user_id", userId);
+
+    // Calcul des niveaux
+    let lvl1 = team.filter(u => u.referred_by === userId);
+    let lvl2 = team.filter(u => lvl1.some(p => p.id === u.referred_by));
+    let lvl3 = team.filter(u => lvl2.some(p => p.id === u.referred_by));
+
+    // Calcul des revenus
+    let r1 = 0, r2 = 0, r3 = 0;
+    commissions?.forEach(c => {
+        if(lvl1.some(u => u.id === c.from_user)) r1 += c.amount;
+        if(lvl2.some(u => u.id === c.from_user)) r2 += c.amount;
+        if(lvl3.some(u => u.id === c.from_user)) r3 += c.amount;
+    });
+
+    // Mise à jour interface
+    document.getElementById("teamCount").innerText = lvl1.length + lvl2.length + lvl3.length;
+    document.getElementById("totalCom").innerText = (r1 + r2 + r3).toLocaleString() + " FCFA";
+
+    document.getElementById("l1Count").innerText = lvl1.length;
+    document.getElementById("l1Rev").innerText = r1.toLocaleString() + " FCFA";
+
+    document.getElementById("l2Count").innerText = lvl2.length;
+    document.getElementById("l2Rev").innerText = r2.toLocaleString() + " FCFA";
+
+    document.getElementById("l3Count").innerText = lvl3.length;
+    document.getElementById("l3Rev").innerText = r3.toLocaleString() + " FCFA";
+}
+
+function copyLink() {
+    const link = document.getElementById("refLink").innerText;
+    navigator.clipboard.writeText(link);
+    const toast = document.getElementById("toast");
+    toast.style.display = "block";
+    setTimeout(() => toast.style.display = "none", 2500);
+}
+
+loadData();
+</script>
+
+</body>
+</html>

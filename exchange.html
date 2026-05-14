@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARAIMO | Échanger Code</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+/* VARIABLES DE DESIGN ARAIMO */
+:root {
+    --bg-deep: #060b19;
+    --card-surface: #12182b;
+    --gold-gradient: linear-gradient(135deg, #d4af37 0%, #f1e0a1 100%);
+    --gold-text: #d4af37;
+    --text-white: #ffffff;
+    --text-dim: #a0acbd;
+    --error: #ff4d4d;
+    --success: #00ff88;
+}
+
+body {
+    margin: 0;
+    background: var(--bg-deep);
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--text-white);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: rgba(18, 24, 43, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.back {
+    font-size: 24px;
+    cursor: pointer;
+    margin-right: 15px;
+    color: var(--gold-text);
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* CONTAINER */
+.container {
+    padding: 30px 20px;
+    text-align: center;
+    flex: 1;
+}
+
+/* ILLUSTRATION */
+.img-container {
+    margin-bottom: 40px;
+}
+
+.img {
+    width: 140px;
+    filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.instruction {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+/* INPUT AREA */
+.input-group {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 18px 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--card-surface);
+    color: var(--text-white);
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.input:focus {
+    border-color: var(--gold-text);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+}
+
+/* BUTTON */
+.btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 30px;
+    background: var(--gold-gradient);
+    color: #000;
+    font-size: 17px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.btn:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+}
+
+/* MESSAGE */
+.message {
+    margin-top: 20px;
+    font-size: 14px;
+    padding: 12px;
+    border-radius: 10px;
+    display: none;
+}
+
+.message.show { display: block; }
+.success { background: rgba(0, 255, 136, 0.1); color: var(--success); border: 1px solid rgba(0, 255, 136, 0.2); }
+.error { background: rgba(255, 77, 77, 0.1); color: var(--error); border: 1px solid rgba(255, 77, 77, 0.2); }
+
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="back" onclick="location.href='account.html'">←</div>
+    <div class="title">Échange de Récompense</div>
+</div>
+
+<div class="container">
+
+    <div class="img-container">
+        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486740.png" class="img">
+    </div>
+
+    <p class="instruction">Entrez votre code de bonus ou de cadeau pour recevoir vos gains instantanément.</p>
+
+    <div class="input-group">
+        <input type="text" id="codeInput" class="input" placeholder="Saisir le code ici">
+    </div>
+
+    <button class="btn" onclick="useCode()">Activer le Bonus</button>
+
+    <div id="msg" class="message"></div>
+
+</div>
+
+<script>
+const client = supabase.createClient(
+    "https://ycswpdydsgoqplkqtpsd.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA"
+);
+
+let userId = localStorage.getItem("user_id");
+
+async function useCode(){
+    let code = document.getElementById("codeInput").value.trim();
+    let msg = document.getElementById("msg");
+
+    if(!code){
+        showMessage("Veuillez entrer un code", "error");
+        return;
+    }
+
+    // Effet visuel pendant le chargement
+    const btn = document.querySelector('.btn');
+    btn.innerHTML = "Traitement...";
+    btn.disabled = true;
+
+    try {
+        const { data, error } = await client.rpc('use_bonus', {
+            p_user: userId,
+            p_code: code
+        });
+
+        if(error){
+            showMessage("Erreur de connexion", "error");
+        } else if(data === "success"){
+            showMessage("✅ Bonus ajouté avec succès !", "success");
+            document.getElementById("codeInput").value = "";
+        } else {
+            showMessage("❌ " + data, "error");
+        }
+    } catch (e) {
+        showMessage("Une erreur est survenue", "error");
+    } finally {
+        btn.innerHTML = "Activer le Bonus";
+        btn.disabled = false;
+    }
+}
+
+function showMessage(text, type) {
+    const msg = document.getElementById("msg");
+    msg.innerHTML = text;
+    msg.className = "message show " + type;
+}
+</script>
+
+</body>
+</html>

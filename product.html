@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARAIMO | Produits</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+/* THÈME PREMIUM COHÉRENT */
+:root {
+    --bg-dark: #0a1128;
+    --card-bg: #1c253d;
+    --gold: #d4af37;
+    --text-white: #ffffff;
+    --text-gray: #a0acbd;
+    --success: #2e7d32;
+    --error: #c62828;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    padding-bottom: 90px;
+}
+
+/* HEADER */
+.header {
+    padding: 20px;
+    font-size: 22px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--gold);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* FILTRE */
+.filter {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 15px;
+}
+
+.filter div {
+    padding: 10px 25px;
+    border-radius: 25px;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.filter div.active-filter {
+    background: var(--gold);
+    color: #0a1128;
+    font-weight: bold;
+}
+
+/* CONTAINER */
+.container {
+    padding: 15px;
+}
+
+/* CARD */
+.card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.top {
+    display: flex;
+    gap: 15px;
+}
+
+.vip-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 15px;
+    object-fit: cover;
+}
+
+.info {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-gray);
+}
+
+.info div { margin-bottom: 4px; }
+.info b { color: var(--text-white); font-size: 15px; }
+
+/* BOTTOM BOXES */
+.bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.box {
+    background: rgba(255,255,255,0.03);
+    padding: 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    flex: 1;
+    text-align: center;
+    color: var(--gold);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* BUTTON */
+.btn {
+    margin-top: 15px;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #d4af37, #f1e0a1);
+    color: #0a1128;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn:disabled {
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* MENU BAS */
+.menu {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #0d1631;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    z-index: 100;
+}
+
+.menu div {
+    text-align: center;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--text-gray);
+    flex: 1;
+}
+
+.menu div span {
+    display: block;
+    font-size: 22px;
+    margin-bottom: 3px;
+}
+
+.active-menu {
+    color: var(--text-white) !important;
+}
+
+/* TOAST */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 25px;
+    border-radius: 12px;
+    font-size: 14px;
+    opacity: 0;
+    transition: 0.3s;
+    z-index: 9999;
+    color: white;
+    text-align: center;
+    min-width: 200px;
+}
+
+.toast.show { opacity: 1; top: 40px; }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--error); }
+.toast.info { background: #1565c0; }
+
+</style>
+</head>
+
+<body>
+
+<div class="header">Plans d'Investissement</div>
+
+<div class="filter">
+    <div id="btnAll" class="active-filter" onclick="setFilter('all')">Tous</div>
+    <div id="btnOwned" onclick="setFilter('owned')">Mes Produits</div>
+</div>
+
+<div class="container" id="plans">
+    <div style="text-align:center; padding:50px;">Chargement des plans...</div>
+</div>
+
+<div class="menu">
+    <div onclick="location.href='dashboard.html'">
+        <span>🏠</span>Accueil
+    </div>
+    <div class="active-menu">
+        <span>🚀</span>Produit
+    </div>
+    <div onclick="location.href='team.html'">
+        <span>👤👤</span>Equipe
+    </div>
+    <div onclick="location.href='account.html'">
+        <span>👤</span>Profil
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const supabaseClient = supabase.createClient(
+    "https://ycswpdydsgoqplkqtpsd.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA"
+);
+
+const images = ["a1.jpg", "a2.jpg", "a3.jpg"];
+let ownedVIPs = [];
+let allPlans = [];
+let currentFilter = "all";
+
+function format(x) {
+    return Number(x).toLocaleString() + " FCFA";
+}
+
+function showToast(message, type = "info") {
+    let toast = document.getElementById("toast");
+    toast.innerText = message;
+    toast.className = "toast show " + type;
+    setTimeout(() => { toast.classList.remove("show"); }, 3000);
+}
+
+async function loadUserVIPs(user_id) {
+    const { data, error } = await supabaseClient
+        .from("user_vips")
+        .select("vip_id")
+        .eq("user_id", user_id);
+    
+    if (data) ownedVIPs = data.map(v => v.vip_id);
+}
+
+async function loadPlans() {
+    let user_id = localStorage.getItem("user_id");
+    if (!user_id) {
+        showToast("Session expirée. Veuillez vous reconnecter.", "error");
+        return;
+    }
+
+    await loadUserVIPs(user_id);
+
+    const { data, error } = await supabaseClient
+        .from("vip_plans")
+        .select("*")
+        .order("price", { ascending: true });
+
+    if (data) {
+        allPlans = data;
+        renderPlans();
+    }
+}
+
+function renderPlans() {
+    let container = document.getElementById("plans");
+    container.innerHTML = "";
+
+    let filtered = currentFilter === "owned"
+        ? allPlans.filter(p => ownedVIPs.includes(p.id))
+        : allPlans;
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div style='text-align:center;color:var(--text-gray);margin-top:50px;'>
+            ${currentFilter === 'owned' ? 'Vous n’avez pas encore d’investissement.' : 'Aucun produit disponible.'}
+        </div>`;
+        return;
+    }
+
+    filtered.forEach((plan, index) => {
+        let img = images[index % images.length];
+        let owned = ownedVIPs.includes(plan.id);
+        let totalIncome = plan.daily_income * plan.cycle_days;
+
+        let card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+            <div class="top">
+                <img src="${img}" class="vip-img">
+                <div class="info">
+                    <div>Prix : <b>${format(plan.price)}</b></div>
+                    <div>Gains / Jour : <b style="color:#00ffcc;">${format(plan.daily_income)}</b></div>
+                    <div>Cycle : <b>${plan.cycle_days} jours</b></div>
+                </div>
+            </div>
+            <div class="bottom">
+                <div class="box">Plan<br><b>${plan.name}</b></div>
+                <div class="box">Total<br><b>${format(totalIncome)}</b></div>
+                <div class="box">Profit<br><b>+${Math.round((totalIncome / plan.price) * 100)}%</b></div>
+            </div>
+            <button class="btn" id="btn-${plan.id}" ${owned ? "disabled" : ""} onclick="buy('${plan.id}')">
+                ${owned ? "✅ Déjà acquis" : "🚀 Investir maintenant"}
+            </button>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function setFilter(type) {
+    currentFilter = type;
+    document.getElementById("btnAll").classList.toggle("active-filter", type === 'all');
+    document.getElementById("btnOwned").classList.toggle("active-filter", type === 'owned');
+    renderPlans();
+}
+
+async function buy(vip_id) {
+    let user_id = localStorage.getItem("user_id");
+    let btn = document.getElementById("btn-" + vip_id);
+
+    if (!confirm("Confirmez-vous cet investissement ?")) return;
+
+    btn.disabled = true;
+    btn.innerText = "Traitement...";
+
+    const { error } = await supabaseClient.rpc("buy_vip", {
+        p_user_id: user_id,
+        p_vip_id: vip_id
+    });
+
+    if (error) {
+        btn.disabled = false;
+        btn.innerText = "Investir maintenant";
+        if (error.message.includes("solde")) {
+            showToast("Solde insuffisant.", "error");
+        } else {
+            showToast("Erreur système. Réessayez.", "error");
+        }
+        return;
+    }
+
+    ownedVIPs.push(vip_id);
+    btn.innerText = "Achat réussi";
+    showToast("Investissement réussi !", "success");
+    renderPlans();
+}
+
+loadPlans();
+</script>
+
+</body>
+</html>

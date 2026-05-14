@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHELL | Inscription Premium</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+/* PALETTE DE COULEURS : Noir & Or */
+:root {
+    --bg-dark: #0f0f0f;
+    --card-bg: #1a1a1a;
+    --gold-primary: #d4af37; /* Or classique */
+    --gold-light: #f1d592;
+    --gold-gradient: linear-gradient(135deg, #b8860b, #d4af37, #f1d592);
+    --text-white: #ffffff;
+    --text-gray: #a0a0a0;
+    --error: #ff4d4d;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: var(--card-bg);
+    border-bottom: 1px solid #333;
+}
+
+.header span {
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--gold-primary);
+}
+
+.header h2 {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--gold-primary);
+}
+
+/* CONTAINER */
+.container {
+    padding: 30px 20px;
+    max-width: 450px;
+    margin: auto;
+    width: 100%;
+}
+
+.title {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.title h1 {
+    font-size: 26px;
+    margin: 0;
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+/* LOGO */
+.logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo img {
+    width: 70px;
+    filter: drop-shadow(0px 0px 8px rgba(212, 175, 55, 0.3));
+    margin-bottom: 10px;
+}
+
+/* FORM STYLING */
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input, .phone-input {
+    width: 100%;
+    padding: 16px;
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 12px;
+    color: white;
+    font-size: 15px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input:focus, .phone-box:focus-within {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
+}
+
+/* PHONE BOX */
+.phone-box {
+    display: flex;
+    align-items: center;
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.country-select {
+    padding: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: var(--gold-light);
+}
+
+.divider {
+    width: 1px;
+    height: 25px;
+    background: #444;
+}
+
+.phone-box input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 16px;
+    color: white;
+    outline: none;
+}
+
+/* DROPDOWN */
+.dropdown {
+    display: none;
+    background: #252525;
+    border: 1px solid var(--gold-primary);
+    border-radius: 10px;
+    margin-top: 5px;
+    max-height: 200px;
+    overflow: auto;
+    position: absolute;
+    z-index: 10;
+    width: 250px;
+}
+
+.dropdown div {
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+}
+
+.dropdown div:hover {
+    background: var(--gold-primary);
+    color: #000;
+}
+
+/* PASSWORD BOX */
+.pass-box {
+    position: relative;
+}
+
+.eye {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--gold-primary);
+}
+
+/* BUTTON */
+button {
+    width: 100%;
+    padding: 18px;
+    margin-top: 25px;
+    border: none;
+    border-radius: 50px;
+    background: var(--gold-gradient);
+    color: #000;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* LINK */
+.link {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 14px;
+    color: var(--text-gray);
+}
+
+.link a {
+    color: var(--gold-primary);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* ERROR */
+.error {
+    color: var(--error);
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+    min-height: 20px;
+}
+
+/* TOAST */
+.toast {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--gold-gradient);
+    color: #000;
+    padding: 15px 30px;
+    border-radius: 50px;
+    display: none;
+    font-weight: bold;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    z-index: 100;
+}
+</style>
+
+</head>
+<body>
+
+
+<div class="container">
+
+    <div class="logo">
+        <img src="logo.png" alt="shell">
+    </div>
+
+    <div class="title">
+        <h1>REJOINDRE L'ÉLITE</h1>
+    </div>
+
+    <!-- NOM -->
+    <div class="input-group">
+        <input class="input" id="name" placeholder="Nom complet">
+    </div>
+
+    <!-- PHONE -->
+    <div class="input-group">
+        <div class="phone-box">
+            <div class="country-select" onclick="toggleDropdown()">
+                <span id="selectedCountry">+226</span>
+                <span>▼</span>
+            </div>
+            <div class="divider"></div>
+            <input type="number" id="phone" placeholder="Numéro de téléphone">
+        </div>
+        <!-- LISTE PAYS -->
+        <div class="dropdown" id="dropdownList">
+            <div onclick="selectCountry('+226')">🇧🇫 Burkina Faso (+226)</div>
+        </div>
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="input-group pass-box">
+        <input class="input" type="password" id="pass" placeholder="Mot de passe">
+        <span class="eye" onclick="togglePass('pass')">👁️</span>
+    </div>
+
+    <!-- CONFIRM -->
+    <div class="input-group pass-box">
+        <input class="input" type="password" id="confirm" placeholder="Confirmer mot de passe">
+        <span class="eye" onclick="togglePass('confirm')">👁️</span>
+    </div>
+
+    <!-- REF -->
+    <div class="input-group">
+        <input class="input" id="referral" placeholder="Code d'invitation (Optionnel)" style="border-style: dashed;">
+    </div>
+
+    <div class="error" id="msg"></div>
+
+    <button id="btn" onclick="register()">Créer mon compte</button>
+
+    <div class="link">
+        Déjà membre ? <a href="login.html">Connectez-vous ici</a>
+    </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Bienvenue A SHELL-INVEST !</div>
+
+<script>
+/* CONFIG SUPABASE */
+const { createClient } = supabase;
+const client = createClient(
+    "https://ycswpdydsgoqplkqtpsd.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA"
+);
+
+let country_code = "+226";
+
+function toggleDropdown(){
+    let list = document.getElementById("dropdownList");
+    list.style.display = list.style.display === "block" ? "none" : "block";
+}
+
+function selectCountry(code){
+    country_code = code;
+    document.getElementById("selectedCountry").innerText = code;
+    document.getElementById("dropdownList").style.display = "none";
+}
+
+function togglePass(id){
+    let input = document.getElementById(id);
+    input.type = input.type === "password" ? "text" : "password";
+}
+
+function showToast(){
+    let t = document.getElementById("toast");
+    t.style.display = "block";
+    setTimeout(()=>{ t.style.display="none"; },2000);
+}
+
+async function register(){
+    let name = document.getElementById("name").value;
+    let phone = document.getElementById("phone").value;
+    let pass = document.getElementById("pass").value;
+    let confirm = document.getElementById("confirm").value;
+    let referral = document.getElementById("referral").value;
+    let msg = document.getElementById("msg");
+    let btn = document.getElementById("btn");
+
+    msg.innerText = "";
+
+    if(!name || !phone || !pass){
+        msg.innerText = "Veuillez remplir tous les champs obligatoires.";
+        return;
+    }
+
+    if(pass !== confirm){
+        msg.innerText = "Les mots de passe ne correspondent pas.";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Traitement en cours...";
+
+    try {
+        const { error } = await client.rpc("register_user", {
+            p_full_name: name,
+            p_country_code: country_code,
+            p_phone: phone,
+            p_password: pass,
+            p_referral_code: referral || null
+        });
+
+        if(error) throw error;
+
+        showToast();
+        setTimeout(()=>{
+            window.location.href = "login.html";
+        }, 2000);
+
+    } catch(err) {
+        msg.innerText = "Erreur : " + err.message;
+        btn.disabled = false;
+        btn.innerText = "Créer mon compte";
+    }
+}
+
+window.onload = function(){
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if(ref) document.getElementById("referral").value = ref;
+}
+</script>
+
+</body>
+</html>

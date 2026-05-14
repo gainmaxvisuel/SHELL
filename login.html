@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHELL | Connexion</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+    --bg-dark: #0f0f0f;
+    --card-bg: #1a1a1a;
+    --gold-primary: #d4af37;
+    --gold-gradient: linear-gradient(135deg, #b8860b, #d4af37, #f1d592);
+    --text-white: #ffffff;
+    --text-gray: #a0a0a0;
+}
+
+* { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+
+body {
+    margin: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: var(--card-bg);
+    border-bottom: 1px solid #333;
+}
+
+.header span { font-size: 24px; cursor: pointer; color: var(--gold-primary); }
+
+.header h2 {
+    flex: 1; text-align: center; margin: 0;
+    font-size: 18px; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--gold-primary);
+}
+
+.container { padding: 30px 20px; max-width: 450px; margin: auto; width: 100%; }
+
+.logo { text-align: center; margin-bottom: 30px; }
+.logo img { width: 80px; filter: drop-shadow(0px 0px 8px rgba(212, 175, 55, 0.3)); }
+
+.title { text-align: center; margin-bottom: 30px; }
+.title h1 {
+    font-size: 26px; margin: 0;
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+}
+
+/* INPUT FIXED PHONE */
+.phone-box {
+    display: flex;
+    align-items: center;
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.country-prefix {
+    padding: 16px;
+    font-weight: bold;
+    color: var(--gold-primary);
+    background: rgba(212, 175, 55, 0.05);
+    border-radius: 12px 0 0 12px;
+}
+
+.phone-box input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 16px;
+    color: white;
+    font-size: 16px;
+    outline: none;
+}
+
+/* PASSWORD */
+.pass-box { position: relative; margin-bottom: 15px; }
+.input-field {
+    width: 100%;
+    padding: 16px;
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    outline: none;
+}
+
+.eye {
+    position: absolute; right: 15px; top: 50%;
+    transform: translateY(-50%); cursor: pointer;
+    color: var(--gold-primary);
+}
+
+/* BUTTON */
+button {
+    width: 100%;
+    padding: 18px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 50px;
+    background: var(--gold-gradient);
+    color: #000;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.link { text-align: center; margin-top: 25px; color: var(--text-gray); }
+.link a { color: var(--gold-primary); text-decoration: none; font-weight: bold; }
+
+.error { color: #ff4d4d; text-align: center; margin-top: 15px; font-size: 14px; min-height: 20px; }
+</style>
+</head>
+<body>
+
+
+<div class="container">
+    <div class="logo">
+        <img src="logo.png" alt="SHELL">
+    </div>
+
+    <div class="title">
+        <h1>Connexion</h1>
+    </div>
+
+    <!-- PHONE FIXE +226 -->
+    <div class="phone-box">
+        <div class="country-prefix">🇧🇫 +226</div>
+        <input type="tel" id="phone" placeholder="Numéro de téléphone">
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="pass-box">
+        <input class="input-field" type="password" id="pass" placeholder="Mot de passe">
+        <span class="eye" onclick="togglePass()">👁️</span>
+    </div>
+
+    <div class="error" id="msg"></div>
+
+    <button id="loginBtn" onclick="login()">Se Connecter</button>
+
+    <div class="link">
+        Pas encore de compte ? <a href="index.html">S'inscrire</a>
+    </div>
+</div>
+
+<script>
+const { createClient } = supabase;
+const client = createClient(
+    "https://ycswpdydsgoqplkqtpsd.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA"
+);
+
+function togglePass() {
+    let p = document.getElementById("pass");
+    p.type = p.type === "password" ? "text" : "password";
+}
+
+async function login() {
+    let phone = document.getElementById("phone").value.replace(/\s+/g, "");
+    let pass = document.getElementById("pass").value.trim();
+    let msg = document.getElementById("msg");
+    let btn = document.getElementById("loginBtn");
+
+    if(!phone || !pass) {
+        msg.innerText = "Veuillez remplir tous les champs";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Vérification...";
+
+    try {
+        const { data, error } = await client
+            .from("users")
+            .select("id")
+            .eq("country_code", "+226") // Fixé ici
+            .eq("phone", phone)
+            .eq("password", pass);
+
+        if(error) throw error;
+
+        if(!data || data.length === 0) {
+            throw new Error("Numéro ou mot de passe incorrect");
+        }
+
+        localStorage.setItem("user_id", data[0].id);
+        msg.style.color = "#00ff88";
+        msg.innerText = "Succès ! Redirection...";
+
+        setTimeout(() => {
+            window.location.href = "dashboard.html";
+        }, 1200);
+
+    } catch(err) {
+        msg.style.color = "#ff4d4d";
+        msg.innerText = err.message;
+        btn.disabled = false;
+        btn.innerText = "Se Connecter";
+    }
+}
+</script>
+
+</body>
+</html>

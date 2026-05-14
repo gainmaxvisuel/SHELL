@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARAIMO | Accueil</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+/* THÈME PREMIUM ÉLITE */
+:root {
+    --bg-dark: #0a1128; /* Bleu nuit profond */
+    --card-bg: #1c253d; /* Anthracite bleuté */
+    --gold: #d4af37;
+    --text-white: #ffffff;
+    --text-gray: #a0acbd;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    padding-bottom: 90px;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+}
+
+.header h2 { font-size: 18px; margin: 0; letter-spacing: 1px; }
+
+.phone-badge {
+    background: rgba(255,255,255,0.1);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #00ffcc;
+    border: 1px solid rgba(0,255,204,0.3);
+}
+
+/* BANNIÈRE SLIDER */
+.slider {
+    width: 92%;
+    height: 180px;
+    margin: 0 auto 20px;
+    border-radius: 25px;
+    overflow: hidden;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.slide {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: 0.8s;
+}
+
+.slide.active { opacity: 1; }
+
+/* CARTE SOLDE */
+.balance-card {
+    width: 92%;
+    margin: 0 auto 25px;
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 25px;
+    box-sizing: border-box;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.balance-card span { color: var(--text-gray); font-size: 13px; text-transform: uppercase; }
+
+.balance-card h1 { margin: 10px 0 0; font-size: 32px; letter-spacing: 1px; }
+
+/* GRILLE D'ACTIONS RAPIDES */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    padding: 0 20px;
+    margin-bottom: 30px;
+}
+
+.action-item { text-align: center; cursor: pointer; }
+
+.icon-circle {
+    width: 55px;
+    height: 55px;
+    background: var(--card-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-size: 22px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.action-item p { margin: 0; font-size: 11px; color: var(--text-gray); }
+
+/* PRODUITS */
+.section-title {
+    padding: 0 20px;
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.products-container {
+    padding: 0 15px;
+}
+
+.product-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.product-card img { width: 100%; height: 160px; object-fit: cover; }
+
+.product-body {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.product-info h3 { margin: 0 0 8px; font-size: 18px; color: var(--gold); }
+
+.product-info div { margin-bottom: 4px; font-size: 13px; color: var(--text-gray); }
+
+.product-info b { color: var(--text-white); }
+
+/* BOUTON INVESTIR CERCLE DORÉ */
+.invest-btn {
+    width: 55px;
+    height: 55px;
+    background: linear-gradient(135deg, #d4af37, #f1e0a1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
+    transition: transform 0.2s ease;
+}
+
+.invest-btn:active { transform: scale(0.9); }
+
+.invest-btn span {
+    font-size: 22px;
+    color: #0a1128; /* Couleur du fond pour le contraste */
+}
+
+/* MENU BAS */
+.menu-bottom {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #0d1631;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    z-index: 100;
+}
+
+.menu-item { text-align: center; color: var(--text-gray); font-size: 11px; text-decoration: none; flex: 1; }
+
+.menu-item.active { color: var(--text-white); }
+
+.menu-item span { display: block; font-size: 20px; margin-bottom: 3px; }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h2>SHELL ÉNERGIE</h2>
+    <div class="phone-badge" id="userPhone">Chargement...</div>
+</div>
+
+<div class="slider" id="slider"></div>
+
+<div class="balance-card">
+    <span>SOLDE SHELL ÉNERGIE</span>
+    <h1 id="userBalance">0 XOF</h1>
+</div>
+
+<div class="quick-actions">
+    <div class="action-item" onclick="location.href='product.html'">
+        <div class="icon-circle">📦</div>
+        <p>Produits</p>
+    </div>
+    <div class="action-item" onclick="location.href='deposit.html'">
+        <div class="icon-circle">💳</div>
+        <p>Recharger</p>
+    </div>
+    <div class="action-item" onclick="location.href='withdraw.html'">
+        <div class="icon-circle">📥</div>
+        <p>Retrait</p>
+    </div>
+    <div class="action-item" onclick="location.href='team.html'">
+        <div class="icon-circle">👥</div>
+        <p>Équipe</p>
+    </div>
+</div>
+
+<div class="section-title">📦 TOUS LES PLANS D'INVESTISSEMENT</div>
+
+<div class="products-container" id="products"></div>
+
+<div class="menu-bottom">
+    <a href="#" class="menu-item active"><span>🏠</span>Accueil</a>
+    <a href="product.html" class="menu-item"><span>🚀</span>Investir</a>
+    <a href="team.html" class="menu-item"><span>👥</span>Réseau</a>
+    <a href="account.html" class="menu-item"><span>⚙️</span>Profil</a>
+</div>
+
+<script>
+const client = supabase.createClient(
+    "https://ycswpdydsgoqplkqtpsd.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA"
+);
+
+const images = ["a1.jpg","a2.jpg","a3.jpg"];
+
+function initSlider() {
+    let box = document.getElementById("slider");
+    images.forEach((img, idx) => {
+        let d = document.createElement('div');
+        d.className = `slide ${idx==0?'active':''}`;
+        d.style.backgroundImage = `url('${img}')`;
+        box.appendChild(d);
+    });
+    let i = 0;
+    setInterval(() => {
+        let slides = document.querySelectorAll(".slide");
+        if(slides.length > 0) {
+            slides[i].classList.remove("active");
+            i = (i + 1) % slides.length;
+            slides[i].classList.add("active");
+        }
+    }, 4000);
+}
+
+async function loadUserData() {
+    let uid = localStorage.getItem("user_id");
+    if(!uid) return;
+
+    const { data } = await client.from("users").select("phone, balance").eq("id", uid).single();
+    if(data) {
+        document.getElementById("userPhone").innerText = "+226 " + data.phone;
+        document.getElementById("userBalance").innerText = data.balance.toLocaleString() + " XOF";
+    }
+}
+
+async function loadAllProducts() {
+    const { data } = await client.from("vip_plans").select("*").order('price', { ascending: true });
+    let box = document.getElementById("products");
+    
+    if (data) {
+        box.innerHTML = ""; 
+        data.forEach((p, idx) => {
+            let img = images[idx % images.length];
+            let totalIncome = p.daily_income * p.cycle_days;
+            
+            box.innerHTML += `
+                <div class="product-card">
+                    <img src="${img}">
+                    <div class="product-body">
+                        <div class="product-info">
+                            <h3>${p.name}</h3>
+                            <div>Prix: <b>${p.price.toLocaleString()} FCFA</b></div>
+                            <div>Revenu/Jour: <b>${p.daily_income.toLocaleString()} FCFA</b></div>
+                            <div>Revenu Total: <b style="color: #00ffcc;">${totalIncome.toLocaleString()} FCFA</b></div>
+                        </div>
+                        <button class="invest-btn" onclick="location.href='product.html'">
+                            <span>invest🚀</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+}
+
+initSlider();
+loadUserData();
+loadAllProducts();
+</script>
+
+</body>
+</html>

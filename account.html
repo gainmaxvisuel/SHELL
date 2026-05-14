@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARAIMO | Profil</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+    --bg-deep: #060b19;
+    --card-surface: #12182b;
+    --gold-gradient: linear-gradient(135deg, #d4af37 0%, #f1e0a1 100%);
+    --gold-text: #d4af37;
+    --text-white: #ffffff;
+    --text-dim: #a0acbd;
+    --accent-blue: #0088cc;
+    --danger: #ff4d4d;
+}
+
+body {
+    margin: 0;
+    background: var(--bg-deep);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-white);
+    padding-bottom: 90px;
+}
+
+/* HEADER PROFILE */
+.profile-header {
+    background: linear-gradient(180deg, #1c253d 0%, var(--bg-deep) 100%);
+    padding: 50px 20px 40px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.avatar-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+}
+
+.avatar-main {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid var(--gold-text);
+    padding: 4px;
+    background: var(--bg-deep);
+}
+
+.vip-floating-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: var(--gold-gradient);
+    color: #000;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+}
+
+.user-phone {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+/* MENU GRID */
+.menu-section {
+    padding: 25px 20px;
+}
+
+.menu-group-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 15px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.menu-list {
+    background: var(--card-surface);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.menu-item:active { background: rgba(255,255,255,0.08); }
+.menu-item:last-child { border-bottom: none; }
+
+.menu-icon { width: 35px; font-size: 22px; }
+.menu-label { flex: 1; font-size: 16px; font-weight: 500; }
+.menu-arrow { color: var(--text-dim); font-size: 18px; opacity: 0.5; }
+
+/* SPECIAL BUTTONS */
+.telegram-card {
+    background: rgba(0, 136, 204, 0.1);
+    border: 1px solid var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+.logout-card {
+    background: rgba(255, 77, 77, 0.05);
+    border: 1px solid rgba(255, 77, 77, 0.2);
+    color: var(--danger);
+}
+
+/* NAVIGATION */
+.bottom-nav {
+    position: fixed; bottom: 0; width: 100%;
+    background: #0d1221; display: flex;
+    padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.nav-link {
+    text-align: center; color: var(--text-dim);
+    font-size: 11px; text-decoration: none; flex: 1;
+}
+
+.nav-link.active { color: var(--gold-text); }
+.nav-link span { display: block; font-size: 22px; margin-bottom: 4px; }
+</style>
+</head>
+
+<body>
+
+<div class="profile-header">
+    <div class="avatar-container">
+        <!-- Avatar épuré sans texte additionnel -->
+        <img id="avatar" class="avatar-main" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+        <div class="vip-floating-badge" id="memberBadge">MEMBRE </div>
+    </div>
+    <div class="user-phone" id="phone">...</div>
+</div>
+
+<div class="menu-section">
+    
+    <div class="menu-group-title">Réseau & Gains</div>
+    <div class="menu-list">
+        <div class="menu-item" onclick="location.href='team.html'">
+            <div class="menu-icon">👥</div>
+            <div class="menu-label">Mon Équipe</div>
+            <div class="menu-arrow">›</div>
+        </div>
+        <div class="menu-item" onclick="location.href='product.html'">
+            <div class="menu-icon">🚀</div>
+            <div class="menu-label">Mes Produits</div>
+            <div class="menu-arrow">›</div>
+        </div>
+        <div class="menu-item" onclick="location.href='team.html'">
+            <div class="menu-icon">🎁</div>
+            <div class="menu-label">Inviter des amis</div>
+            <div class="menu-arrow">›</div>
+        </div>
+    </div>
+
+    <div class="menu-group-title">Finances</div>
+    <div class="menu-list">
+        <div class="menu-item" onclick="location.href='history.html'">
+            <div class="menu-icon">💳</div>
+            <div class="menu-label">Transactions</div>
+            <div class="menu-arrow">›</div>
+        </div>
+        <div class="menu-item" onclick="location.href='exchange.html'">
+            <div class="menu-icon">🔄</div>
+            <div class="menu-label">Échanger Récompenses</div>
+            <div class="menu-arrow">›</div>
+        </div>
+    </div>
+
+    <div class="menu-group-title">Support & Session</div>
+    <div class="menu-list">
+        <div class="menu-item telegram-card" onclick="openTelegram()">
+            <div class="menu-icon">✈️</div>
+            <div class="menu-label">Canal Telegram Officiel</div>
+            <div class="menu-arrow">↗</div>
+        </div>
+        <!-- Bouton Déconnexion ajouté, Paramètres et Téléchargement supprimés -->
+        <div class="menu-item logout-card" onclick="logout()">
+            <div class="menu-icon">🚪</div>
+            <div class="menu-label">Déconnexion</div>
+            <div class="menu-arrow"></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="bottom-nav">
+    <a href="dashboard.html" class="nav-link"><span>🏠</span>Accueil</a>
+    <a href="product.html" class="nav-link"><span>⚡</span>Investir</a>
+    <a href="team.html" class="nav-link"><span>👤👤</span>Equipe</a>
+    <a href="#" class="nav-link active"><span>👤</span>Profil</a>
+</div>
+
+<script>
+const client = supabase.createClient(
+    "https://ycswpdydsgoqplkqtpsd.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA"
+);
+
+async function loadProfile() {
+    let userId = localStorage.getItem("user_id");
+    if(!userId) return;
+
+    const { data: user } = await client.from("users").select("phone").eq("id", userId).single();
+    if(user) document.getElementById("phone").innerText = user.phone;
+
+    const { data: vips } = await client.from("user_vips").select("id").eq("user_id", userId);
+    if(vips) document.getElementById("vipBadge").innerText = "VIP " + vips.length;
+}
+
+function openTelegram(){
+    // Nouveau lien mis à jour
+    window.open("https://t.me/+7518_uc3shE2ZDVk", "_blank");
+}
+
+function logout(){
+    if(confirm("Voulez-vous vraiment vous déconnecter ?")) {
+        localStorage.clear();
+        location.href = "login.html";
+    }
+}
+
+loadProfile();
+</script>
+
+</body>
+</html>

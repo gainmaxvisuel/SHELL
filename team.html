@@ -268,7 +268,7 @@ async function loadData() {
     // 1. Récupérer le code de parrainage
     const { data: user } = await client.from("users").select("referral_code").eq("id", userId).single();
     if(user) {
-        document.getElementById("refLink").innerText = `https://shell-3nfr.vercel.app/register?ref=${user.referral_code}`;
+        document.getElementById("refLink").innerText = `https://shell-3nfr.vercel.app/index.html?ref=${user.referral_code}`;
     }
 
     // 2. Récupérer l'équipe

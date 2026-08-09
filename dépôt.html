@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARAIMO | Recharge</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-dark: #0a1128;
+            --card-bg: #1c253d;
+            --gold: #d4af37;
+            --text-white: #ffffff;
+            --text-gray: #a0acbd;
+            --orange: #ff6600;
+            --wave: #1dc5ea;
+        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-dark); color: var(--text-white); padding: 20px; }
+        .header { display: flex; align-items: center; margin-bottom: 30px; }
+        .back-btn { font-size: 24px; color: var(--gold); text-decoration: none; margin-right: 15px; cursor: pointer; }
+        .deposit-card { background: var(--card-bg); border-radius: 25px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: var(--text-gray); font-size: 14px; }
+        input, select { width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 16px; box-sizing: border-box; outline: none; }
+        input:focus, select:focus { border-color: var(--gold); }
+        select option { background: var(--card-bg); color: white; }
+        
+        .operator-instructions {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 4px solid var(--gold);
+            padding: 15px;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .operator-instructions.active { display: block; }
+        .operator-instructions p { margin: 5px 0; font-size: 14px; color: var(--text-gray); }
+        .operator-instructions .highlight { color: var(--text-white); font-weight: bold; }
+
+        .btn-pay { width: 100%; padding: 18px; background: linear-gradient(135deg, var(--gold), #f1e0a1); border: none; border-radius: 15px; color: #0a1128; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .btn-pay:disabled { opacity: 0.6; cursor: not-allowed; }
+        .note { font-size: 12px; color: var(--text-gray); margin-top: 15px; line-height: 1.4; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="back-btn" onclick="location.href='dashboard.html'">←</div>
+    <h2>Recharger mon compte</h2>
+</div>
+
+<div class="deposit-card">
+    <div class="input-group">
+        <label>Montant à envoyer (XOF)</label>
+        <input type="number" id="amount" placeholder="Entrez le montant exact" oninput="updateInstructions()">
+    </div>
+
+    <div class="input-group">
+        <label>Choisissez l'opérateur</label>
+        <select id="operator" onchange="handleOperatorChange()">
+            <option value="">-- Sélectionnez un opérateur --</option>
+            <option value="orange">Orange Money</option>
+            <option value="wave">Wave</option>
+            <option value="other">Autre opérateur</option>
+        </select>
+    </div>
+
+    <!-- Instructions dynamiques -->
+    <div id="orangeInstructions" class="operator-instructions">
+        <p>Instructions Orange Money :</p>
+        <p>Composez : <span class="highlight" id="ussdCodeDisplay">*144*10*05768266*montant#</span></p>
+        <p>Marchand : <span class="highlight">wendpouyre Aubin Ethane Steeven</span></p>
+    </div>
+
+    <div id="waveInstructions" class="operator-instructions">
+        <p>Instructions Wave :</p>
+        <p>Numéro : <span class="highlight">+226 05768266</span></p>
+        <p>Nom : <span class="highlight">wendpouyre Aubin Ethane</span></p>
+    </div>
+
+    <div id="otherInstructions" class="operator-instructions" style="border-left-color: #ff4d4d;">
+        <p style="color: #ff9999;">⚠️ Les autres opérateurs sont actuellement en cours de configuration.</p>
+    </div>
+
+    <div class="input-group">
+        <label>Votre numéro de téléphone (Paiement)</label>
+        <input type="text" id="phone" placeholder="Numéro utilisé pour l'envoi">
+    </div>
+
+    <button class="btn-pay" id="confirmBtn" onclick="enregistrerEtPayer()">EFFECTUER LE PAIEMENT</button>
+    
+    <p class="note">
+        ⚠️ Après avoir validé le paiement sur votre téléphone, votre compte sera crédité après vérification manuelle de votre dépôt.
+    </p>
+</div>
+
+<script>
+const client = supabase.createClient(
+    "https://ycswpdydsgoqplkqtpsd.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA"
+);
+
+function handleOperatorChange() {
+    const op = document.getElementById('operator').value;
+    
+    // Masquer toutes les instructions
+    document.querySelectorAll('.operator-instructions').forEach(el => el.classList.remove('active'));
+    
+    // Afficher les bonnes instructions selon le choix
+    if (op === 'orange') {
+        document.getElementById('orangeInstructions').classList.add('active');
+        updateInstructions();
+    } else if (op === 'wave') {
+        document.getElementById('waveInstructions').classList.add('active');
+    } else if (op === 'other') {
+        document.getElementById('otherInstructions').classList.add('active');
+    }
+}
+
+function updateInstructions() {
+    const amount = document.getElementById('amount').value || 'montant';
+    const ussdDisplay = document.getElementById('ussdCodeDisplay');
+    ussdDisplay.innerText = `*144*10*05768266*${amount}#`;
+}
+
+async function enregistrerEtPayer() {
+    const amount = document.getElementById('amount').value;
+    const phone = document.getElementById('phone').value;
+    const operator = document.getElementById('operator').value;
+    const uid = localStorage.getItem("user_id");
+    const btn = document.getElementById('confirmBtn');
+
+    if(!uid) { alert("Erreur : Veuillez vous reconnecter."); return; }
+    if(!amount || amount < 500) { alert("Veuillez entrer un montant valide (minimum 500 XOF)."); return; }
+    if(!operator) { alert("Veuillez choisir un opérateur de paiement."); return; }
+    if(!phone) { alert("Veuillez entrer votre numéro de téléphone."); return; }
+
+    if(operator === 'other') {
+        alert("Cet opérateur est actuellement en cours de configuration. Veuillez utiliser Orange Money ou Wave.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Enregistrement...";
+
+    try {
+        // 1. Enregistrement de la trace dans Supabase
+        const { error } = await client
+            .from('deposits')
+            .insert([{
+                user_id: uid,
+                amount: parseInt(amount),
+                phone: phone,
+                operator: operator,
+                status: 'pending'
+            }]);
+
+        if (error) throw error;
+
+        // 2. Déclenchement de l'action selon l'opérateur
+        setTimeout(() => {
+            if (operator === 'orange') {
+                // Formatage du code USSD encodé pour appel direct (tel:...)
+                const ussdCode = `*144*10*05768266*${amount}%23`;
+                window.location.href = `tel:${ussdCode}`;
+            } else if (operator === 'wave') {
+                // Redirection ou ouverture vers l'application / contact Wave
+                window.location.href = `tel:+22605768266`;
+            }
+        }, 800);
+
+    } catch (err) {
+        alert("Erreur base de données : " + err.message);
+        btn.disabled = false;
+        btn.innerText = "EFFECTUER LE PAIEMENT";
+    }
+}
+</script>
+
+</body>
+          </html>
+          

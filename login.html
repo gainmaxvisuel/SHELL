@@ -12,6 +12,7 @@
     --bg-dark: #0f0f0f;
     --card-bg: #1a1a1a;
     --gold-primary: #d4af37;
+    --gold-light: #f1d592;
     --gold-gradient: linear-gradient(135deg, #b8860b, #d4af37, #f1d592);
     --text-white: #ffffff;
     --text-gray: #a0a0a0;
@@ -59,22 +60,40 @@ body {
     font-weight: 800;
 }
 
-/* INPUT FIXED PHONE */
+/* PHONE BOX & DROPDOWN (Similaire à l'inscription) */
+.input-group {
+    margin-bottom: 15px;
+    position: relative;
+}
+
 .phone-box {
     display: flex;
     align-items: center;
     background: #252525;
     border: 1px solid #333;
     border-radius: 12px;
-    margin-bottom: 15px;
+    overflow: hidden;
 }
 
-.country-prefix {
+.phone-box:focus-within {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
+}
+
+.country-select {
     padding: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    cursor: pointer;
     font-weight: bold;
-    color: var(--gold-primary);
-    background: rgba(212, 175, 55, 0.05);
-    border-radius: 12px 0 0 12px;
+    color: var(--gold-light);
+}
+
+.divider {
+    width: 1px;
+    height: 25px;
+    background: #444;
 }
 
 .phone-box input {
@@ -85,6 +104,31 @@ body {
     color: white;
     font-size: 16px;
     outline: none;
+}
+
+/* DROPDOWN */
+.dropdown {
+    display: none;
+    background: #252525;
+    border: 1px solid var(--gold-primary);
+    border-radius: 10px;
+    margin-top: 5px;
+    max-height: 200px;
+    overflow: auto;
+    position: absolute;
+    z-index: 10;
+    width: 250px;
+}
+
+.dropdown div {
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+}
+
+.dropdown div:hover {
+    background: var(--gold-primary);
+    color: #000;
 }
 
 /* PASSWORD */
@@ -98,6 +142,11 @@ body {
     color: white;
     font-size: 16px;
     outline: none;
+}
+
+.input-field:focus {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
 }
 
 .eye {
@@ -119,6 +168,17 @@ button {
     font-weight: bold;
     text-transform: uppercase;
     cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .link { text-align: center; margin-top: 25px; color: var(--text-gray); }
@@ -129,7 +189,6 @@ button {
 </head>
 <body>
 
-
 <div class="container">
     <div class="logo">
         <img src="logo.png" alt="SHELL">
@@ -139,10 +198,23 @@ button {
         <h1>Connexion</h1>
     </div>
 
-    <!-- PHONE FIXE +226 -->
-    <div class="phone-box">
-        <div class="country-prefix">🇧🇫 +226</div>
-        <input type="tel" id="phone" placeholder="Numéro de téléphone">
+    <!-- PHONE AVEC SÉLECTEUR DE PAYS -->
+    <div class="input-group">
+        <div class="phone-box">
+            <div class="country-select" onclick="toggleDropdown()">
+                <span id="selectedCountry">+226</span>
+                <span>▼</span>
+            </div>
+            <div class="divider"></div>
+            <input type="tel" id="phone" placeholder="Numéro de téléphone">
+        </div>
+        <!-- LISTE PAYS -->
+        <div class="dropdown" id="dropdownList">
+            <div onclick="selectCountry('+226')">🇧🇫 Burkina Faso (+226)</div>
+            <div onclick="selectCountry('+225')">🇨🇮 Côte d'Ivoire (+225)</div>
+            <div onclick="selectCountry('+229')">🇧🇯 Bénin (+229)</div>
+            <div onclick="selectCountry('+228')">🇹🇬 Togo (+228)</div>
+        </div>
     </div>
 
     <!-- PASSWORD -->
@@ -167,6 +239,19 @@ const client = createClient(
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inljc3dwZHlkc2dvcXBsa3F0cHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NjY4MTcsImV4cCI6MjA5MDU0MjgxN30.67bBMdHtcGFIJuZuY_Xd4hBN4hj86JjHVXGN3oPbKMA"
 );
 
+let country_code = "+226";
+
+function toggleDropdown(){
+    let list = document.getElementById("dropdownList");
+    list.style.display = list.style.display === "block" ? "none" : "block";
+}
+
+function selectCountry(code){
+    country_code = code;
+    document.getElementById("selectedCountry").innerText = code;
+    document.getElementById("dropdownList").style.display = "none";
+}
+
 function togglePass() {
     let p = document.getElementById("pass");
     p.type = p.type === "password" ? "text" : "password";
@@ -179,6 +264,7 @@ async function login() {
     let btn = document.getElementById("loginBtn");
 
     if(!phone || !pass) {
+        msg.style.color = "#ff4d4d";
         msg.innerText = "Veuillez remplir tous les champs";
         return;
     }
@@ -190,7 +276,7 @@ async function login() {
         const { data, error } = await client
             .from("users")
             .select("id")
-            .eq("country_code", "+226") // Fixé ici
+            .eq("country_code", country_code) // Utilise la variable dynamique
             .eq("phone", phone)
             .eq("password", pass);
 

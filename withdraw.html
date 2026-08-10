@@ -119,7 +119,7 @@
 
     <div class="summary-box" id="summaryBox">
         <div class="summary-line"><span>Montant brut</span> <span id="resBrut">0 XOF</span></div>
-        <div class="summary-line"><span>Frais de service (17%)</span> <span id="resFrais" style="color:var(--danger)">- 0 XOF</span></div>
+        <div class="summary-line"><span>Frais de service (15%)</span> <span id="resFrais" style="color:var(--danger)">- 0 XOF</span></div>
         <div class="summary-line summary-total"><span>Net à recevoir</span> <span id="resNet">0 XOF</span></div>
     </div>
 
@@ -176,7 +176,7 @@ async function processWithdrawal() {
     btn.innerText = "Validation...";
 
     try {
-        const fee = Math.round(amt * 0.07);
+        const fee = Math.round(amt * 0.15);
 
         // Débiter le solde de l'utilisateur
         const { error: errUpd } = await client.from("users").update({ balance: balance - amt }).eq("id", uid);
